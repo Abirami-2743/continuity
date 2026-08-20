@@ -1,0 +1,51 @@
+{
+  "script_id": "legal-precision",
+  "difficulty": "Hard",
+  "description": "Tests the Legal Clearance agent's judgment rather than simple keyword matching. Some real-world references are genuinely risky; others are trivial, generic, or already-cleared use and should be treated as low/no risk.",
+  "scenes": [
+    "SCENE 1 - INT. LIVING ROOM - DAY. Priya scrolls through her phone, an unbranded generic smartphone, and mentions offhand that she 'should really switch to an iPhone someday.'",
+    "SCENE 2 - INT. OFFICE - DAY. Priya's boss says, 'Get me on a call with Sundar Pichai directly, I don't care how,' in an exasperated, clearly exaggerated tone about wanting to escalate a complaint.",
+    "SCENE 3 - INT. KITCHEN - NIGHT. Priya's roommate drinks from a plain red soda can with no visible branding, referred to only as 'a soda.'",
+    "SCENE 4 - INT. CAR - DAY. Priya's father proudly says he's driven the same Toyota Corolla for fifteen years and it's never once broken down, praising the brand by name at length.",
+    "SCENE 5 - EXT. STADIUM - NIGHT. A crowd chants a chant closely mirroring a real, currently-active national cricket team's well-known signature chant, word for word, in a scene clearly depicting a real upcoming tournament match by name and date.",
+    "SCENE 6 - INT. BEDROOM - NIGHT. Priya's younger brother has a poster on his wall of a clearly recognizable, still-in-production animated character from a major studio franchise, described in enough visual detail (colors, exact costume, logo) to be unambiguous.",
+    "SCENE 7 - INT. CAFE - DAY. Priya mentions she's a big fan of 'a famous singer,' left deliberately unnamed and generic, with no identifying details given."
+  ],
+  "ground_truth": [
+    {
+      "type": "legal_clearance_low_risk",
+      "description": "Scene 1's iPhone mention is a single, brief, generic aspirational reference \u2014 low risk, arguably not worth a strong flag.",
+      "expected_scenes": ["legal-precision-scene-0"]
+    },
+    {
+      "type": "legal_clearance_medium_risk",
+      "description": "Scene 2 names a real, identifiable real person (Sundar Pichai) directly in dialogue in a context that could imply his personal involvement \u2014 worth a flag even though it's brief and exaggerated.",
+      "expected_scenes": ["legal-precision-scene-1"]
+    },
+    {
+      "type": "not_a_flag",
+      "description": "Scene 3's unbranded soda can has no identifiable brand or trademark \u2014 should not be flagged.",
+      "expected_scenes": []
+    },
+    {
+      "type": "legal_clearance_medium_risk",
+      "description": "Scene 4's extended, named, positive brand endorsement (Toyota Corolla) goes beyond incidental use and edges toward implied endorsement \u2014 worth flagging for clearance review.",
+      "expected_scenes": ["legal-precision-scene-3"]
+    },
+    {
+      "type": "legal_clearance_high_risk",
+      "description": "Scene 5 combines a real sports organization's likely-trademarked chant with a real, named, dated tournament \u2014 higher risk requiring clearance.",
+      "expected_scenes": ["legal-precision-scene-4"]
+    },
+    {
+      "type": "legal_clearance_high_risk",
+      "description": "Scene 6 describes copyrighted IP (a specific studio character) in enough visual detail to constitute clear infringement risk, not just an incidental mention.",
+      "expected_scenes": ["legal-precision-scene-5"]
+    },
+    {
+      "type": "not_a_flag",
+      "description": "Scene 7 deliberately avoids naming any real person \u2014 should not be flagged.",
+      "expected_scenes": []
+    }
+  ]
+}

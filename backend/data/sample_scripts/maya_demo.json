@@ -1,0 +1,35 @@
+{
+  "script_id": "maya-demo",
+  "description": "Original fictional mini-series used to validate Continuity end-to-end. Contains deliberately planted inconsistencies with a known ground truth, so detection accuracy can be measured rather than eyeballed.",
+  "scenes": [
+    "EPISODE 1, SCENE 3 - INT. CABIN - NIGHT. Maya enters the cabin wearing a red jacket, soaked from the rain outside. She sets down her bag and notices her silver locket is missing from around her neck. She retraces her steps but can't find it. 'I must have dropped it on the trail,' she says to herself.",
+    "EPISODE 2, SCENE 7 - EXT. TOWN SQUARE - DAY. Maya walks through the town square, greeting shopkeepers. She mentions to a friend that she's been searching for her grandmother's locket for days, calling it 'the only thing I have left of her.'",
+    "EPISODE 3, SCENE 2 - INT. CABIN - DAY. Maya enters the same cabin from Episode 1, wearing a blue jacket. She sits by the window. There is no mention of the locket in this scene.",
+    "EPISODE 4, SCENE 5 - INT. CABIN - NIGHT. A flashback to the same night as Episode 1 Scene 3: Maya enters the cabin, soaked from rain. This time the scene describes her wearing a green raincoat instead of a red jacket, with no explanation for the change.",
+    "EPISODE 5, SCENE 1 - INT. CABIN - DAY. Maya finds her silver locket sitting on the windowsill of the cabin. She picks it up, relieved, and puts it back around her neck.",
+    "EPISODE 6, SCENE 4 - EXT. CABIN PORCH - DAY. Maya's brother Sam visits. Seeing the locket around her neck, he says, 'Wait, you lost that locket three years ago. I thought it was gone for good.' Maya looks confused but doesn't correct him.",
+    "EPISODE 6, SCENE 9 - INT. TOWN DINER - DAY. Maya sits at a table and calls Elon Musk on her iPhone to ask about a business investment for her cafe."
+  ],
+  "ground_truth": [
+    {
+      "type": "contradiction",
+      "description": "Same flashback night (Ep1/Sc3 vs Ep4/Sc5) describes Maya's outerwear as a red jacket in one telling and a green raincoat in another, with no in-story explanation.",
+      "expected_scenes": ["maya-demo-scene-0", "maya-demo-scene-3"]
+    },
+    {
+      "type": "unresolved_thread_or_state_violation",
+      "description": "Locket is established as lost in Ep1/Sc3, reappears in Ep5/Sc1 with no explanation of how it got to the windowsill.",
+      "expected_scenes": ["maya-demo-scene-0", "maya-demo-scene-4"]
+    },
+    {
+      "type": "contradiction",
+      "description": "Sam's line in Ep6/Sc4 says the locket was lost 'three years ago,' contradicting the established timeline where it was lost days earlier (Ep1) and referenced as recently lost in Ep2.",
+      "expected_scenes": ["maya-demo-scene-1", "maya-demo-scene-5"]
+    },
+    {
+      "type": "legal_clearance",
+      "description": "Real person (Elon Musk) and real brand (iPhone) referenced directly in dialogue — clearance review required.",
+      "expected_scenes": ["maya-demo-scene-6"]
+    }
+  ]
+}

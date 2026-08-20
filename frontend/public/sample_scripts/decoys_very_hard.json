@@ -1,0 +1,37 @@
+{
+  "script_id": "decoys-very-hard",
+  "difficulty": "Very Hard",
+  "description": "Tests precision, not just recall. Several attribute changes ARE explained in-story and must NOT be flagged. Two genuine unexplained contradictions are buried among them.",
+  "scenes": [
+    "SCENE 1 - INT. APARTMENT - MORNING. Daniel wakes up with short, neatly cut hair. He mentions to his roommate that he's getting it cut again this afternoon because it's grown out too fast this month.",
+    "SCENE 2 - INT. BARBERSHOP - AFTERNOON. Daniel gets his haircut, as planned. The barber trims it shorter.",
+    "SCENE 3 - INT. APARTMENT - EVENING. Daniel now has noticeably shorter hair than in Scene 1, consistent with just having it cut at the barbershop.",
+    "SCENE 4 - EXT. PARK - DAY. Daniel is jogging. He is wearing a blue running jacket. Earlier that morning (not shown), he mentioned to a friend on the phone that he'd just bought a new blue jacket for running.",
+    "SCENE 5 - INT. CAFE - DAY. Daniel sits with a coffee, still wearing the same blue running jacket from the park, consistent with having just come from his jog.",
+    "SCENE 6 - INT. OFFICE - DAY. Daniel is at his desk. His left arm is in a cast. No prior scene shows an injury, but a coworker casually references 'since your bike accident last week' \u2014 establishing the cast is expected and explained, even though the accident itself was never shown on screen.",
+    "SCENE 7 - EXT. PARK - DAY (LATER THE SAME WEEK). Daniel is jogging again, this time wearing a red jacket instead of the blue one, with no mention of buying a new jacket or any reason for the change.",
+    "SCENE 8 - INT. OFFICE - DAY (LATER). Daniel's cast is gone and his arm appears completely healed. A coworker remarks 'you're out of that cast already? That was fast,' and Daniel just laughs it off without explanation \u2014 despite this being only three days after Scene 6."
+  ],
+  "ground_truth": [
+    {
+      "type": "not_a_conflict",
+      "description": "Hair length changing between Scene 1 and Scene 3 is explained by the haircut in Scene 2. Must NOT be flagged.",
+      "expected_scenes": []
+    },
+    {
+      "type": "not_a_conflict",
+      "description": "The cast appearing in Scene 6 with no prior injury scene is explained by the coworker's dialogue referencing a bike accident. Must NOT be flagged as an unexplained state change.",
+      "expected_scenes": []
+    },
+    {
+      "type": "contradiction",
+      "description": "Daniel's running jacket changes from blue (Scenes 4-5, explicitly established as newly bought) to red (Scene 7) with no explanation given anywhere in the script.",
+      "expected_scenes": ["decoys-very-hard-scene-3", "decoys-very-hard-scene-6"]
+    },
+    {
+      "type": "timeline_contradiction",
+      "description": "The cast is shown removed and the arm fully healed only three days after the injury (per the coworker's own line 'that was fast'), which is medically implausible and never explained \u2014 a genuine timeline inconsistency, distinct from the well-explained cast appearance itself.",
+      "expected_scenes": ["decoys-very-hard-scene-5", "decoys-very-hard-scene-7"]
+    }
+  ]
+}
