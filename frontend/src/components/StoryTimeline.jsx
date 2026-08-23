@@ -94,9 +94,55 @@ function buildRows(scenes) {
     });
   });
 
+  const merged = mergeNearDuplicateRows(rows);
+
   // Only keep rows that appear in 2+ scenes — those are the ones that can
   // meaningfully show continuity across the timeline.
-  return Array.from(rows.values()).filter(
+  return Array.from(merged.values()).filter(
     (row) => Object.keys(row.bySceneId).length >= 2
   );
+}
+
+function mergeNearDuplicateRows(rows) {
+  // Mirrors the backend's _merge_near_duplicate_names in comparator.py —
+  // the Extractor reads each scene independently, so "ring" in one scene
+  // and "gold ring" in another arrive as separate rows even though they're
+  // the same object. Merge same-type rows where one label's words are
+  // fully contained in the other's (word-boundary check, so "ring" merges
+  // into "gold ring" but NOT into "earring" — different words entirely).
+  const keys = Array.from(rows.keys());
+  const parent = new Map(keys.map((k) => [k, k]));
+
+  const find = (k) => {
+    while (parent.get(k) !== k) k = parent.get(k);
+    return k;
+  };
+
+  for (let i = 0; i < keys.length; i++) {
+    for (let j = i + 1; j < keys.length; j++) {
+      const [type1] = keys[i].split(":");
+      const [type2] = keys[j].split(":");
+      if (type1 !== type2) continue;
+
+      const words1 = new Set(rows.get(keys[i]).label.toLowerCase().split(/\s+/));
+      const words2 = new Set(rows.get(keys[j]).label.toLowerCase().split(/\s+/));
+      const isSubset = (a, b) => [...a].every((w) => b.has(w));
+
+      if (words1.size && words2.size && (isSubset(words1, words2) || isSubset(words2, words1))) {
+        const bigger = words1.size >= words2.size ? keys[i] : keys[j];
+        const smaller = bigger === keys[i] ? keys[j] : keys[i];
+        parent.set(find(smaller), find(bigger));
+      }
+    }
+  }
+
+  const merged = new Map();
+  keys.forEach((k) => {
+    const root = find(k);
+    if (!merged.has(root)) {
+      merged.set(root, { ...rows.get(root), bySceneId: {} });
+    }
+    Object.assign(merged.get(root).bySceneId, rows.get(k).bySceneId);
+  });
+  return merged;
 }
