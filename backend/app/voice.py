@@ -26,10 +26,20 @@ def narrate(text: str, voice_id: str = DEFAULT_VOICE_ID) -> bytes:
         },
         json={
             "text": text,
-            "model_id": "eleven_monolingual_v1",
+            "model_id": "eleven_flash_v2_5",  # eleven_monolingual_v1 was
+                                                # deprecated & removed by
+                                                # ElevenLabs on 2026-07-09 —
+                                                # this is their current
+                                                # low-latency recommendation
             "voice_settings": {"stability": 0.5, "similarity_boost": 0.75},
         },
         timeout=30,
     )
-    response.raise_for_status()
+    if not response.ok:
+        # Surface ElevenLabs' actual error body instead of a bare status
+        # code — this is what would have told us "model deprecated"
+        # immediately instead of needing a web search to find out.
+        raise RuntimeError(
+            f"ElevenLabs TTS failed ({response.status_code}): {response.text}"
+        )
     return response.content
