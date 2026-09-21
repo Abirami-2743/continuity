@@ -1,23 +1,35 @@
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 
-export default function UploadPanel({ onAnalyze, loading }) {
+const OTHER_OPTION = {
+  id: "other",
+  title: "Other (write your own script)",
+  difficulty: "",
+  description:
+    "Not a preset — write a new script from scratch, or paste one you already have below.",
+};
+
+export default function UploadPanel({ onAnalyze, loading = false }) {
   const [scriptId, setScriptId] = useState("");
   const [scenesText, setScenesText] = useState("");
   const [demos, setDemos] = useState([]);
-  const [selectedDemo, setSelectedDemo] = useState("");
+  const [selectedDemo, setSelectedDemo] = useState(OTHER_OPTION.id);
 
   useEffect(() => {
     fetch("/sample_scripts/manifest.json")
       .then((res) => res.json())
       .then((data) => {
-        setDemos(data.demos || []);
-        if (data.demos?.length) setSelectedDemo(data.demos[0].id);
+        setDemos([OTHER_OPTION, ...(data.demos || [])]);
+        setSelectedDemo(OTHER_OPTION.id); // default to "write your own", not a random preset
       })
-      .catch(() => setDemos([])); // manifest missing is non-fatal — manual paste still works
+      .catch(() => setDemos([OTHER_OPTION])); // manifest missing is non-fatal — manual paste still works
   }, []);
 
   const handleSubmit = () => {
+    if (typeof onAnalyze !== "function") {
+      console.error("UploadPanel: the `onAnalyze` prop is missing or not a function.");
+      return;
+    }
     const scenes = scenesText
       .split(/\n---\n/)
       .map((s) => s.trim())
@@ -27,13 +39,25 @@ export default function UploadPanel({ onAnalyze, loading }) {
   };
 
   const loadSample = async () => {
+    if (selectedDemo === OTHER_OPTION.id) {
+      // "Other" isn't a real file to fetch -- it just means starting fresh.
+      setScriptId("");
+      setScenesText("");
+      return;
+    }
     const demo = demos.find((d) => d.id === selectedDemo);
     if (!demo) return;
-    const res = await fetch(`/sample_scripts/${demo.file}`);
-    const data = await res.json();
-    setScriptId(data.script_id);
-    setScenesText(data.scenes.join("\n---\n"));
+    try {
+      const res = await fetch(`/sample_scripts/${demo.file}`);
+      const data = await res.json();
+      setScriptId(data.script_id);
+      setScenesText(data.scenes.join("\n---\n"));
+    } catch (err) {
+      console.error("Could not load demo script:", err);
+    }
   };
+
+  const currentDemo = demos.find((d) => d.id === selectedDemo);
 
   return (
     <motion.div
@@ -64,19 +88,15 @@ export default function UploadPanel({ onAnalyze, loading }) {
             >
               {demos.map((d) => (
                 <option key={d.id} value={d.id}>
-                  {d.title} — {d.difficulty}
+                  {d.difficulty ? `${d.title} — ${d.difficulty}` : d.title}
                 </option>
               ))}
             </select>
             <button className="btn-secondary" onClick={loadSample} type="button">
-              Load
+              {selectedDemo === OTHER_OPTION.id ? "Start fresh" : "Load"}
             </button>
           </div>
-          {demos.find((d) => d.id === selectedDemo) && (
-            <p className="muted demo-description">
-              {demos.find((d) => d.id === selectedDemo).description}
-            </p>
-          )}
+          {currentDemo && <p className="muted demo-description">{currentDemo.description}</p>}
         </>
       )}
 
