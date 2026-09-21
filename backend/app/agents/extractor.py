@@ -9,7 +9,7 @@ or pre-written. Different scripts produce genuinely different extractions.
 """
 import uuid
 from app.llm import call_json, FAST_MODEL
-from app.models.schema import SceneFacts
+from app.models.schema import SceneFacts, Character, Prop, TimelineMarker, RealWorldReference
 
 SYSTEM_PROMPT = """You are the Extractor Agent in a script-continuity system.
 Read the given scene and extract structured facts. Return ONLY a JSON object
@@ -31,7 +31,34 @@ Only include what is actually stated or strongly implied in the scene text.
 Do not invent details. If a field has nothing relevant, use an empty list
 or null. Be precise about appearance and prop state — these are the details
 a continuity error would violate later in the story.
+
+For "real_world_references": capture every mention of a specific real
+person, brand/product, or copyrighted work (film, book, show, song, etc.),
+by its real name — including INDIRECT or CASUAL mentions, not just when a
+character directly interacts with the thing. This includes:
+- A character comparing the current situation to a named real film, show,
+  book, or other work ("this feels like X", "it's like something out of Y",
+  "reminds me of Z").
+- A character name-dropping a real person in passing dialogue, even
+  without meeting them (e.g. mentioning having met them, admiring them,
+  quoting them).
+- A real brand or product mentioned by name, even briefly or in the
+  background, not just when it's a plot-relevant object.
+A reference does not need to be central to the scene to count — a single
+passing line is enough. Only skip references to clearly invented, fictional
+names that the story itself created (e.g. an in-universe company or
+product with no real-world counterpart).
 """
+
+
+def _parse_many(model, items):
+    parsed = []
+    for item in items or []:
+        try:
+            parsed.append(model.model_validate(item))
+        except Exception:
+            continue
+    return parsed
 
 
 def extract_scene(script_id: str, scene_index: int, raw_text: str) -> SceneFacts:
@@ -49,10 +76,10 @@ def extract_scene(script_id: str, scene_index: int, raw_text: str) -> SceneFacts
         scene_id=scene_id,
         scene_index=scene_index,
         raw_text=raw_text,
-        characters=result.get("characters", []),
-        props=result.get("props", []),
+        characters=_parse_many(Character, result.get("characters")),
+        props=_parse_many(Prop, result.get("props")),
         setting=result.get("setting"),
         weather=result.get("weather"),
-        timeline_markers=result.get("timeline_markers", []),
-        real_world_references=result.get("real_world_references", []),
+        timeline_markers=_parse_many(TimelineMarker, result.get("timeline_markers")),
+        real_world_references=_parse_many(RealWorldReference, result.get("real_world_references")),
     )

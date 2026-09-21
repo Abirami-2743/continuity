@@ -1,45 +1,37 @@
 """
-Voice narration of the Supervisor Agent's report summary via ElevenLabs.
-This is a genuine product feature (played from the dashboard), not just
-video-narration tooling — see README for the distinction and why it's
-scoped this way.
+Voice narration of the Supervisor Agent's report summary via gTTS
+(Google Text-to-Speech). This is a genuine product feature (played from
+the dashboard), not just video-narration tooling — see README for the
+distinction and why it's scoped this way.
+
+Originally built on ElevenLabs, swapped to gTTS because the team doesn't
+have a paid/free ElevenLabs quota available for the hackathon build.
+gTTS is free, needs no API key, and returns MP3 bytes just like the old
+implementation did — so main.py's /narrate endpoint and the frontend's
+audio-fetching code didn't need to change at all.
 """
-import os
-import requests
+import io
 
-ELEVENLABS_TTS_URL = "https://api.elevenlabs.io/v1/text-to-speech/{voice_id}"
-DEFAULT_VOICE_ID = "21m00Tcm4TlvDq8ikWAM"  # ElevenLabs default "Rachel" voice
+from gtts import gTTS
+from gtts.tts import gTTSError
+
+DEFAULT_LANG = "en"
 
 
-def narrate(text: str, voice_id: str = DEFAULT_VOICE_ID) -> bytes:
-    """Returns raw MP3 bytes for the given text. Raises if ELEVENLABS_API_KEY
-    is unset or the request fails — no fallback fake audio."""
-    api_key = os.environ.get("ELEVENLABS_API_KEY")
-    if not api_key:
-        raise RuntimeError("ELEVENLABS_API_KEY is not set.")
+def narrate(text: str, lang: str = DEFAULT_LANG) -> bytes:
+    """Returns raw MP3 bytes for the given text.
 
-    response = requests.post(
-        ELEVENLABS_TTS_URL.format(voice_id=voice_id),
-        headers={
-            "xi-api-key": api_key,
-            "Content-Type": "application/json",
-        },
-        json={
-            "text": text,
-            "model_id": "eleven_flash_v2_5",  # eleven_monolingual_v1 was
-                                                # deprecated & removed by
-                                                # ElevenLabs on 2026-07-09 —
-                                                # this is their current
-                                                # low-latency recommendation
-            "voice_settings": {"stability": 0.5, "similarity_boost": 0.75},
-        },
-        timeout=30,
-    )
-    if not response.ok:
-        # Surface ElevenLabs' actual error body instead of a bare status
-        # code — this is what would have told us "model deprecated"
-        # immediately instead of needing a web search to find out.
-        raise RuntimeError(
-            f"ElevenLabs TTS failed ({response.status_code}): {response.text}"
-        )
-    return response.content
+    Raises RuntimeError if synthesis fails (e.g. no network access to
+    Google's TTS endpoint) — no fallback fake audio, matching the old
+    ElevenLabs behavior of failing loudly rather than silently.
+    """
+    if not text or not text.strip():
+        raise RuntimeError("Cannot narrate empty text.")
+
+    try:
+        tts = gTTS(text=text, lang=lang)
+        buf = io.BytesIO()
+        tts.write_to_fp(buf)
+        return buf.getvalue()
+    except gTTSError as e:
+        raise RuntimeError(f"gTTS synthesis failed: {e}") from e

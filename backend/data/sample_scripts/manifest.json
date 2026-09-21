@@ -1,0 +1,39 @@
+{
+  "demos": [
+    {
+      "id": "weather-easy",
+      "title": "Weather Contradiction (Easy)",
+      "difficulty": "Easy",
+      "description": "One obvious contradiction, no red herrings. Good for a first sanity check.",
+      "file": "weather_easy.json"
+    },
+    {
+      "id": "maya-demo",
+      "title": "Maya's Locket (Medium)",
+      "difficulty": "Medium",
+      "description": "Multiple entities, a state violation, a timeline contradiction, and a legal flag.",
+      "file": "maya_demo.json"
+    },
+    {
+      "id": "chain-of-custody-hard",
+      "title": "Chain of Custody (Hard)",
+      "difficulty": "Hard",
+      "description": "An object passes between three characters; the contradiction is buried in an otherwise plausible sequence.",
+      "file": "chain_of_custody_hard.json"
+    },
+    {
+      "id": "decoys-very-hard",
+      "title": "Explained Decoys (Very Hard)",
+      "difficulty": "Very Hard",
+      "description": "Several changes ARE explained in-story and should NOT be flagged \u2014 tests false-positive avoidance, not just detection.",
+      "file": "decoys_very_hard.json"
+    },
+    {
+      "id": "legal-precision",
+      "title": "Legal Precision Test",
+      "difficulty": "Hard",
+      "description": "Mix of real-world references that should and should not be flagged \u2014 tests the Legal Clearance agent's judgment, not just keyword matching.",
+      "file": "legal_precision.json"
+    }
+  ]
+}

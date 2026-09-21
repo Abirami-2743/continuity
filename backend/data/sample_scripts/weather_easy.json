@@ -1,0 +1,17 @@
+{
+  "script_id": "weather-easy",
+  "difficulty": "Easy",
+  "description": "A single, unambiguous contradiction with no distracting detail \u2014 a sanity-check demo.",
+  "scenes": [
+    "SCENE 1 - EXT. FARMHOUSE - NIGHT. Thunder cracks overhead as rain hammers the tin roof. Elena sprints from the barn to the porch, drenched, and slams the door behind her.",
+    "SCENE 2 - INT. FARMHOUSE KITCHEN - NIGHT. Elena, still dripping wet from the storm outside, tells her sister about the barn roof leaking.",
+    "SCENE 3 - EXT. FARMHOUSE - NIGHT (FLASHBACK). The same storm night is shown again from a different angle: Elena walks calmly from the barn to the porch under a clear, starry sky, completely dry."
+  ],
+  "ground_truth": [
+    {
+      "type": "contradiction",
+      "description": "Scene 1 and Scene 3 depict the identical night (same storm, same walk from barn to porch) with directly opposing weather: torrential rain vs. a clear starry sky.",
+      "expected_scenes": ["weather-easy-scene-0", "weather-easy-scene-2"]
+    }
+  ]
+}

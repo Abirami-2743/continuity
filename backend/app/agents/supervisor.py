@@ -20,7 +20,8 @@ updates (a partial dict), not the full state object. Returning the full
 state from parallel branches causes LangGraph to see two conflicting
 writes to unchanged keys in the same step and raise InvalidUpdateError.
 """
-from typing import TypedDict
+from contextvars import ContextVar
+from typing import Callable, TypedDict
 from concurrent.futures import ThreadPoolExecutor
 from langgraph.graph import StateGraph, END
 
@@ -30,6 +31,15 @@ from app.agents.legal_clearance import clear_references
 from app.models.schema import SceneFacts, ConflictFlag, ClearanceFlag, ContinuityReport
 
 MAX_PARALLEL_CALLS = 4  # extraction now uses FAST_MODEL (separate rate-limit budget), so this can run higher than the comparator/legal cap
+
+_stage_cb: ContextVar[Callable[[str], None] | None] = ContextVar("stage_cb", default=None)
+_compiled_graph = None
+
+
+def _notify(stage: str):
+    cb = _stage_cb.get()
+    if cb:
+        cb(stage)
 
 
 class PipelineState(TypedDict):
@@ -42,6 +52,7 @@ class PipelineState(TypedDict):
 
 
 def extract_node(state: PipelineState) -> dict:
+    _notify("extract")
     # Scene extraction is embarrassingly parallel — each scene's extraction
     # is independent of every other, so run them concurrently instead of
     # waiting on each Groq call in turn. This is the single biggest latency
@@ -56,14 +67,17 @@ def extract_node(state: PipelineState) -> dict:
 
 
 def compare_node(state: PipelineState) -> dict:
+    _notify("compare")
     return {"conflicts": compare_story_state(state["all_facts"])}
 
 
 def legal_node(state: PipelineState) -> dict:
+    _notify("legal")
     return {"clearance_flags": clear_references(state["all_facts"])}
 
 
 def compile_report_node(state: PipelineState) -> dict:
+    _notify("compile")
     facts_count = sum(
         len(f.characters) + len(f.props) + len(f.timeline_markers)
         for f in state["all_facts"]
@@ -83,6 +97,7 @@ def compile_report_node(state: PipelineState) -> dict:
         clearance_flags=state["clearance_flags"],
         scene_facts=state["all_facts"],
         summary_text=" ".join(summary_parts),
+        analysis_source="live_llm",
     )
     return {"report": report}
 
@@ -103,14 +118,28 @@ def build_graph():
     return graph.compile()
 
 
-def run_pipeline(script_id: str, raw_scenes: list[str]) -> ContinuityReport:
-    graph = build_graph()
-    result = graph.invoke({
-        "script_id": script_id,
-        "raw_scenes": raw_scenes,
-        "all_facts": [],
-        "conflicts": [],
-        "clearance_flags": [],
-        "report": None,
-    })
-    return result["report"]
+def get_graph():
+    global _compiled_graph
+    if _compiled_graph is None:
+        _compiled_graph = build_graph()
+    return _compiled_graph
+
+
+def run_pipeline(
+    script_id: str,
+    raw_scenes: list[str],
+    on_stage: Callable[[str], None] | None = None,
+) -> ContinuityReport:
+    token = _stage_cb.set(on_stage)
+    try:
+        result = get_graph().invoke({
+            "script_id": script_id,
+            "raw_scenes": raw_scenes,
+            "all_facts": [],
+            "conflicts": [],
+            "clearance_flags": [],
+            "report": None,
+        })
+        return result["report"]
+    finally:
+        _stage_cb.reset(token)

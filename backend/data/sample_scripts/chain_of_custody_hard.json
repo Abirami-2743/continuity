@@ -1,0 +1,25 @@
+{
+  "script_id": "chain-of-custody-hard",
+  "difficulty": "Hard",
+  "description": "A pocket watch changes hands across several characters and scenes. The contradiction is buried inside an otherwise coherent, plausible sequence of custody.",
+  "scenes": [
+    "SCENE 1 - INT. WORKSHOP - DAY. An old brass pocket watch, engraved with the initials 'J.R.', sits on Victor's workbench. Victor polishes it carefully and places it in a velvet pouch, then hands the pouch to his apprentice, Mara, instructing her to deliver it to the collector across town.",
+    "SCENE 2 - EXT. STREET - DAY. Mara walks briskly through the market carrying the velvet pouch, checking over her shoulder as if worried about being followed.",
+    "SCENE 3 - INT. COLLECTOR'S SHOP - DAY. Mara arrives and hands the velvet pouch to the collector, Mr. Aldridge. He opens it, inspects the brass pocket watch engraved 'J.R.', and pays her.",
+    "SCENE 4 - INT. COLLECTOR'S SHOP - NIGHT. Mr. Aldridge places the pocket watch in a locked display case. He tells his assistant no one has touched it since it arrived.",
+    "SCENE 5 - INT. COLLECTOR'S SHOP - MORNING. Mr. Aldridge opens the display case to show a customer the pocket watch. It is now a silver watch engraved with the initials 'T.K.', with no mention of it being a different piece or any explanation for the swap.",
+    "SCENE 6 - INT. WORKSHOP - DAY (FLASHBACK, LATER REVEALED). Victor is shown separately restoring a silver watch engraved 'T.K.' for a different client entirely, unrelated to Mara's delivery."
+  ],
+  "ground_truth": [
+    {
+      "type": "state_violation",
+      "description": "The brass 'J.R.' pocket watch is established as locked in the display case with no one having touched it (Scene 4), yet Scene 5 shows a completely different watch (silver, 'T.K.') in the same case with no explanation \u2014 this is a genuine unexplained swap, not merely a second watch existing.",
+      "expected_scenes": ["chain-of-custody-hard-scene-3", "chain-of-custody-hard-scene-4"]
+    },
+    {
+      "type": "note",
+      "description": "Scene 6 is a plausible RED HERRING: it explains that a silver 'T.K.' watch exists elsewhere for an unrelated client. A good system should not use this scene alone to 'explain away' the swap in Scene 5, since Scene 6 never states this is the SAME watch that ended up in Aldridge's case \u2014 the contradiction in Scene 4 vs 5 stands on its own.",
+      "expected_scenes": []
+    }
+  ]
+}

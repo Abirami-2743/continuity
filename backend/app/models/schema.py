@@ -101,6 +101,7 @@ class ClearanceFlag(BaseModel):
     risk_note: str
     confidence: float = Field(ge=0.0, le=1.0)
     requires_human_review: bool = True
+    web_context: Optional[str] = None  # snippet from live verification, when PARALLEL_API_KEY is set
 
 
 class ContinuityReport(BaseModel):

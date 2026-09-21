@@ -15,15 +15,18 @@ def search_reference(query: str) -> str | None:
     api_key = os.environ.get("PARALLEL_API_KEY")
     if not api_key:
         return None
-    response = requests.post(
-        PARALLEL_SEARCH_URL,
-        headers={"Authorization": f"Bearer {api_key}", "Content-Type": "application/json"},
-        json={"query": query, "max_results": 3},
-        timeout=20,
-    )
-    response.raise_for_status()
-    data = response.json()
-    results = data.get("results", [])
-    if not results:
+    try:
+        response = requests.post(
+            PARALLEL_SEARCH_URL,
+            headers={"Authorization": f"Bearer {api_key}", "Content-Type": "application/json"},
+            json={"query": query, "max_results": 3},
+            timeout=20,
+        )
+        response.raise_for_status()
+        data = response.json()
+        results = data.get("results", [])
+        if not results:
+            return None
+        return " ".join(r.get("snippet", "") for r in results[:2])
+    except Exception:
         return None
-    return " ".join(r.get("snippet", "") for r in results[:2])

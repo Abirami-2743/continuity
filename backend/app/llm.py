@@ -11,7 +11,7 @@ import re
 import time
 from pathlib import Path
 from dotenv import load_dotenv
-from groq import Groq, APIConnectionError, APIStatusError, RateLimitError
+from groq import Groq, APIConnectionError, APIStatusError, RateLimitError, BadRequestError
 
 # Explicit path — don't rely on load_dotenv()'s auto-search, which can miss
 # the file depending on how the script was invoked (e.g. `python -m app.eval`
@@ -91,6 +91,25 @@ def call_json(system_prompt: str, user_prompt: str, temperature: float = 0.1,
                 wait = 2 ** attempt  # 2s, 4s, 8s, 16s
                 print(f"  [retry {attempt}/{MAX_RETRIES}] {type(e).__name__}, "
                       f"retrying in {wait}s...")
+                time.sleep(wait)
+        except BadRequestError as e:
+            # Groq's JSON-mode enforcement can itself fail on a single
+            # generation (empty or malformed output for THIS request) even
+            # though the request shape is perfectly valid -- that's a
+            # transient content-generation hiccup, not a real config error,
+            # so it's worth a few retries just like a JSON decode failure.
+            # Any other 400 (bad model name, invalid params, etc.) is a
+            # genuine request-shape problem -- raise immediately, same as
+            # before.
+            body = getattr(e, "body", None) or {}
+            error_code = (body.get("error") or {}).get("code") if isinstance(body, dict) else None
+            if error_code != "json_validate_failed":
+                raise
+            last_error = e
+            if attempt < MAX_RETRIES:
+                wait = 2 ** attempt
+                print(f"  [retry {attempt}/{MAX_RETRIES}] Groq JSON validation "
+                      f"failed for this generation, retrying in {wait}s...")
                 time.sleep(wait)
         except APIStatusError:
             raise  # real API errors (bad model, bad key) — don't retry blindly
