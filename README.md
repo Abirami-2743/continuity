@@ -113,3 +113,5 @@ continuity/
 - **Multi-agent over a single prompt**: continuity-checking genuinely splits into distinct skills — extraction, comparison, legal judgment — and separating them makes each independently promptable, testable, and debuggable.
 - **One Comparator call per entity, not per scene-pair**: an earlier pairwise design burned through token budgets fast and couldn't reason across more than two scenes at once. Batching by entity fixed both.
 - **The system never asserts a verdict.** Every flag comes with a confidence score and a "requires human review" status — it's built to surface evidence, not replace a script supervisor's judgment.
+
+- Testing Repo Guard AI handoff workflow.
